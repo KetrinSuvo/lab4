@@ -33,5 +33,5 @@ patch -p0 -i patch
 _______________________________________
 
 moreutils_0.50.tar.gz - исходный код автора пакета
-moreutils_0.50.patch.gz - патч с изменениями к пакету
+moreutils_0.50.diff.gz - патч с изменениями к пакету
 moreutils_0.50.dsc - .dsc файл нужный программе dpkg-source
