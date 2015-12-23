@@ -1,0 +1,1022 @@
+diff -u moreutils/chronic moreutils-0.50/chronic
+--- moreutils/chronic	2015-12-23 23:42:26.336365874 +0300
++++ moreutils-0.50/chronic	2015-12-10 10:35:54.000000000 +0300
+@@ -24,7 +24,7 @@
+ 
+ =head1 AUTHOR
+ 
+-Copyright 2010 by Joey Hess <id@joeyh.name>
++Copyright 2010 by Joey Hess <joey@kitenet.net>
+ 
+ Original concept and "chronic" name by Chuck Houpt.
+ 
+diff -u moreutils/combine moreutils-0.50/combine
+--- moreutils/combine	2015-12-23 23:42:26.336365874 +0300
++++ moreutils-0.50/combine	2015-12-10 10:35:54.000000000 +0300
+@@ -66,7 +66,7 @@
+ 
+ =head1 AUTHOR
+ 
+-Copyright 2006 by Joey Hess <id@joeyh.name>
++Copyright 2006 by Joey Hess <joey@kitenet.net>
+ 
+ Licensed under the GNU GPL.
+ 
+Общие подкаталоги: moreutils/debian и moreutils-0.50/debian
+Только в moreutils-0.50: envx
+Только в moreutils-0.50: errno
+diff -u moreutils/errno.docbook moreutils-0.50/errno.docbook
+--- moreutils/errno.docbook	2015-12-23 23:42:26.336365874 +0300
++++ moreutils-0.50/errno.docbook	2015-12-10 10:35:54.000000000 +0300
+@@ -21,7 +21,7 @@
+ -->
+ 
+ <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.4//EN"
+-"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"
++"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd"
+ []>
+ 
+ <refentry>
+@@ -39,8 +39,6 @@
+ 	<refmeta>
+ 		<refentrytitle>errno</refentrytitle>
+ 		<manvolnum>1</manvolnum>
+-		<refmiscinfo class="manual">moreutils</refmiscinfo>
+-		<refmiscinfo class="source">moreutils</refmiscinfo>
+ 	</refmeta>
+ 
+ 	<refnamediv>
+@@ -79,7 +77,7 @@
+ 		errno codes, and the corresponding descriptions. For example,
+ 		if given <literal>ENOENT</literal> on a Linux system, it
+ 		prints out the code 2 and the description "No such file or directory".
+-		If given the code 2, it prints <literal>ENOENT</literal>
++		If given the code 2, it printes <literal>ENOENT</literal>
+ 		and the same description.</para>
+ 		
+ 	</refsect1>
+@@ -119,9 +117,9 @@
+ 	
+ 	<refsect1>
+ 		<title>AUTHOR</title>
+-
+-		<para>
+ 			Lars Wirzenius
++		<para>
++			
+ 		</para>
+ 	</refsect1>
+ 	
+Только в moreutils-0.50: errno.o
+Только в moreutils-0.50: errnos.h
+Только в moreutils: .git
+Только в moreutils: .gitattributes
+Только в moreutils-0.50: ifdata
+diff -u moreutils/ifdata.c moreutils-0.50/ifdata.c
+--- moreutils/ifdata.c	2015-12-23 23:42:26.336365874 +0300
++++ moreutils-0.50/ifdata.c	2015-12-10 10:35:54.000000000 +0300
+@@ -18,17 +18,6 @@
+ 	#include <net/if.h>
+ #endif
+ 
+-#if defined(__APPLE__)
+-	#define s6_addr16 __u6_addr.__u6_addr16
+-	#include <net/if.h>
+-#endif
+-
+-#if defined(__sun)
+-   #define s6_addr16 _S6_un._S6_u8
+-   #include <net/if.h>
+-   #include <sys/sockio.h>
+-#endif
+-
+ #include <netinet/in.h>
+ #include <errno.h>
+ #include <fcntl.h>
+@@ -127,15 +116,8 @@
+ 	if ((res = ioctl(sock, request, req)) == -1) {
+ 		if (ioctl_errno)
+ 			*ioctl_errno = errno;
+-		if (print_error == PRINT_ERROR) {
+-			if (errno == ENODEV) {
+-				fprintf(stderr, "No such network interface: %s\n", ifname);
+-				exit(1);
+-			}
+-			else
+-				fprintf(stderr, "ioctl on %s: %s\n", ifname,
+-					strerror(errno));
+-		}
++		if (print_error == PRINT_ERROR)
++			fprintf(stderr, "ioctl on %s: %s\n", ifname, strerror(errno));
+ 		close(sock);
+ 		return 1;
+ 	}
+@@ -382,25 +364,15 @@
+ 
+ void please_do(int ndo, int *todo, const char *ifname) {
+ 	int i;
+-	int exists;
+ 	static struct ifreq req;
+ 	if (!ndo) return;
+-
+-	exists = if_exists(ifname);
+-
+ 	// printf("I have %d items in my queue.\n",ndo);
+ 	for (i=0; i<ndo; i++) {
+-		if (!exists &&
+-		    (todo[i] != DO_EXISTS) && (todo[i] != DO_PEXISTS)) {
+-			fprintf(stderr, "No such network interface: %s\n", ifname);
+-			exit(1);
+-		}
+-
+ 		switch (todo[i]) {
+ 			case DO_EXISTS:
+-				exit(!exists);
++				exit(!if_exists(ifname));
+ 			case DO_PEXISTS:
+-				printf("%s", exists ? "yes" : "no");
++				printf("%s", if_exists(ifname) ? "yes" : "no");
+ 				break;
+ 			case DO_PADDRESS:
+ 				print_addr(if_addr(ifname, &req));
+diff -u moreutils/ifdata.docbook moreutils-0.50/ifdata.docbook
+--- moreutils/ifdata.docbook	2015-12-23 23:42:26.336365874 +0300
++++ moreutils-0.50/ifdata.docbook	2015-12-10 10:35:54.000000000 +0300
+@@ -21,7 +21,7 @@
+ -->
+ 
+ <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.4//EN"
+-"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"
++"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd"
+ []>
+ 
+ <refentry>
+@@ -37,8 +37,6 @@
+ 	<refmeta>
+ 		<refentrytitle>ifdata</refentrytitle>
+ 		<manvolnum>1</manvolnum>
+-		<refmiscinfo class="manual">moreutils</refmiscinfo>
+-		<refmiscinfo class="source">moreutils</refmiscinfo>
+ 	</refmeta>
+ 
+ 	<refnamediv>
+Только в moreutils-0.50: ifne
+diff -u moreutils/ifne.c moreutils-0.50/ifne.c
+--- moreutils/ifne.c	2015-12-23 23:42:26.336365874 +0300
++++ moreutils-0.50/ifne.c	2015-12-10 10:35:54.000000000 +0300
+@@ -23,8 +23,6 @@
+ #include <sys/wait.h>
+ #include <sys/types.h>
+ #include <string.h>
+-#include <signal.h>
+-
+ #define streq(a, b) (!strcmp((a), (b)))
+ 
+ static void stdin_to_stream(char *buf, ssize_t r, FILE *outf) {
+diff -u moreutils/ifne.docbook moreutils-0.50/ifne.docbook
+--- moreutils/ifne.docbook	2015-12-23 23:42:26.336365874 +0300
++++ moreutils-0.50/ifne.docbook	2015-12-10 10:35:54.000000000 +0300
+@@ -21,7 +21,7 @@
+ -->
+ 
+ <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.4//EN"
+-"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"
++"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd"
+ []>
+ 
+ <refentry>
+@@ -39,8 +39,6 @@
+ 	<refmeta>
+ 		<refentrytitle>ifne</refentrytitle>
+ 		<manvolnum>1</manvolnum>
+-		<refmiscinfo class="manual">moreutils</refmiscinfo>
+-		<refmiscinfo class="source">moreutils</refmiscinfo>
+ 	</refmeta>
+ 
+ 	<refnamediv>
+Только в moreutils-0.50: isutf8
+diff -u moreutils/isutf8.docbook moreutils-0.50/isutf8.docbook
+--- moreutils/isutf8.docbook	2015-12-23 23:42:26.340367876 +0300
++++ moreutils-0.50/isutf8.docbook	2015-12-10 10:35:54.000000000 +0300
+@@ -21,7 +21,7 @@
+ -->
+ 
+ <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.4//EN"
+-"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"
++"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd"
+ []>
+ 
+ <refentry>
+@@ -39,8 +39,6 @@
+ 	<refmeta>
+ 		<refentrytitle>isutf8</refentrytitle>
+ 		<manvolnum>1</manvolnum>
+-		<refmiscinfo class="manual">moreutils</refmiscinfo>
+-		<refmiscinfo class="source">moreutils</refmiscinfo>
+ 	</refmeta>
+ 
+ 	<refnamediv>
+@@ -108,9 +106,9 @@
+ 	
+ 	<refsect1>
+ 		<title>AUTHOR</title>
+-
+-		<para>
+ 			Lars Wirzenius
++		<para>
++			
+ 		</para>
+ 	</refsect1>
+ 	
+Только в moreutils-0.50: lckdo
+diff -u moreutils/lckdo.docbook moreutils-0.50/lckdo.docbook
+--- moreutils/lckdo.docbook	2015-12-23 23:42:26.340367876 +0300
++++ moreutils-0.50/lckdo.docbook	2015-12-10 10:35:54.000000000 +0300
+@@ -8,7 +8,7 @@
+ -->
+ 
+ <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.4//EN"
+-"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"
++"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd"
+ []>
+ 
+ <refentry>
+@@ -26,8 +26,6 @@
+ 	<refmeta>
+ 		<refentrytitle>lckdo</refentrytitle>
+ 		<manvolnum>1</manvolnum>
+-		<refmiscinfo class="manual">moreutils</refmiscinfo>
+-		<refmiscinfo class="source">moreutils</refmiscinfo>
+ 	</refmeta>
+ 
+ 	<refnamediv>
+diff -u moreutils/Makefile moreutils-0.50/Makefile
+--- moreutils/Makefile	2015-12-23 23:42:26.336365874 +0300
++++ moreutils-0.50/Makefile	2015-12-23 00:32:19.855594293 +0300
+@@ -1,11 +1,11 @@
+-BINS=isutf8 ifdata ifne pee sponge mispipe lckdo parallel errno
++BINS=isutf8 ifdata ifne pee sponge mispipe lckdo parallel errno envx
+ PERLSCRIPTS=vidir vipe ts combine zrun chronic
+ MANS=sponge.1 vidir.1 vipe.1 isutf8.1 ts.1 combine.1 ifdata.1 ifne.1 pee.1 zrun.1 chronic.1 mispipe.1 lckdo.1 parallel.1 errno.1
+ CFLAGS?=-O2 -g -Wall
+ INSTALL_BIN?=install -s
+ PREFIX?=/usr
+ 
+-DOCBOOK2XMAN=xsltproc --param man.authors.section.enabled 0 /usr/share/xml/docbook/stylesheet/docbook-xsl/manpages/docbook.xsl
++DOCBOOK2XMAN=docbook2x-man
+ 
+ all: $(BINS) $(MANS)
+ 
+@@ -23,10 +23,30 @@
+ check: isutf8
+ 	./check-isutf8
+ 
+-%.1: %.docbook
+-	xmllint --noout --valid $<
++isutf8.1: isutf8.docbook
+ 	$(DOCBOOK2XMAN) $<
+ 
++ifdata.1: ifdata.docbook
++	$(DOCBOOK2XMAN) $<
++
++ifne.1: ifne.docbook
++	$(DOCBOOK2XMAN) $<
++
++pee.1: pee.docbook
++	$(DOCBOOK2XMAN) $<
++
++sponge.1: sponge.docbook
++	$(DOCBOOK2XMAN) $<
++
++mispipe.1: mispipe.docbook
++	$(DOCBOOK2XMAN) $<
++
++lckdo.1: lckdo.docbook
++	$(DOCBOOK2XMAN) $<
++
++parallel.1: parallel.docbook
++	$(DOCBOOK2XMAN) $<
++	
+ errno.o: errnos.h
+ errnos.h:
+ 	echo '#include <errno.h>' > dump.c
+Только в moreutils-0.50: Makefile~
+Только в moreutils-0.50: mispipe
+diff -u moreutils/mispipe.c moreutils-0.50/mispipe.c
+--- moreutils/mispipe.c	2015-12-23 23:42:26.340367876 +0300
++++ moreutils-0.50/mispipe.c	2015-12-10 10:35:54.000000000 +0300
+@@ -114,7 +114,7 @@
+ 	if (close(filedes[1]))
+ 		error_with_errno("Failed (in child) closing filedes[1]");
+ 	/* Do the second command, and throw away the exit status. */
+-	if (system(cmd)) {}
++	system(cmd);
+ 	/* Close the standard input. */
+ 	if (close(0))
+ 		error_with_errno("Failed (in child) closing standard output "
+diff -u moreutils/mispipe.docbook moreutils-0.50/mispipe.docbook
+--- moreutils/mispipe.docbook	2015-12-23 23:42:26.340367876 +0300
++++ moreutils-0.50/mispipe.docbook	2015-12-10 10:35:54.000000000 +0300
+@@ -2,7 +2,7 @@
+ 
+ <!--
+ 
+-Copyright 2006 Joey Hess <id@joeyh.name>
++Copyright 2006 Joey Hess <joey@kitenet.net>
+ 
+ This program is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the
+@@ -21,7 +21,7 @@
+ -->
+ 
+ <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.4//EN"
+-"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"
++"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd"
+ []>
+ 
+ <refentry>
+@@ -39,8 +39,6 @@
+ 	<refmeta>
+ 		<refentrytitle>mispipe</refentrytitle>
+ 		<manvolnum>1</manvolnum>
+-		<refmiscinfo class="manual">moreutils</refmiscinfo>
+-		<refmiscinfo class="source">moreutils</refmiscinfo>
+ 	</refmeta>
+ 
+ 	<refnamediv>
+Только в moreutils-0.50: parallel
+diff -u moreutils/parallel.c moreutils-0.50/parallel.c
+--- moreutils/parallel.c	2015-12-23 23:42:26.340367876 +0300
++++ moreutils-0.50/parallel.c	2015-12-10 10:35:54.000000000 +0300
+@@ -32,17 +32,10 @@
+ #include <sys/wait.h>
+ #include <unistd.h>
+ 
+-#ifdef __sun
+-# include <sys/loadavg.h> /* getloadavg() */
+-#endif
+-
+ #if !defined(WEXITED)
+ #define WEXITED 0
+ #endif
+ 
+-static pid_t pipe_child_stdout = 0;
+-static pid_t pipe_child_stderr = 0;
+-
+ void usage() {
+ 	printf("parallel [OPTIONS] command -- arguments\n\tfor each argument, "
+ 	       "run command with argument, in parallel\n");
+@@ -50,29 +43,11 @@
+ 	exit(1);
+ }
+ 
+-static void redirect(int fd, int target_fd, const char *name)
+-{
+-	if (fd == target_fd)
+-		return;
+-
+-	if (dup2(fd, target_fd) < 0) {
+-		fprintf(stderr, "unable to open %s from internal pipe: %s\n",
+-			name, strerror(errno));
+-		exit(1);
+-	}
+-	close(fd);
+-}
+-
+-void exec_child(char **command, char **arguments, int replace_cb, int nargs,
+-		int stdout_fd, int stderr_fd)
+-{
++void exec_child(char **command, char **arguments, int replace_cb, int nargs) {
+ 	if (fork() != 0) {
+ 		return;
+ 	}
+ 
+-	redirect(stdout_fd, 1, "stdout");
+-	redirect(stderr_fd, 2, "stderr");
+-
+ 	if (command[0]) {
+ 		char **argv;
+ 		int argc = 0;
+@@ -127,64 +102,6 @@
+ 	return 1;
+ }
+ 
+-static int pipe_child(int fd, int orig_fd)
+-{
+-	const char *fd_info = (orig_fd == 1) ? "out" : "err";
+-	char buf[4096];
+-	int r;
+-
+-	while ((r = read(fd, buf, sizeof(buf))) >= 0) {
+-		int w;
+-		int len;
+-
+-		len = r;
+-
+-		do {
+-			w = write(orig_fd, buf, len);
+-			if (w < 0) {
+-				fprintf(stderr, "unable to write to std%s: "
+-					"%s\n", fd_info, strerror(errno));
+-				exit(1);
+-			}
+-
+-			len -= w;
+-		} while (len > 0);
+-	}
+-
+-	fprintf(stderr, "unable to read from std%s: %s\n", fd_info,
+-		strerror(errno));
+-	exit(1);
+-}
+-
+-pid_t create_pipe_child(int *fd, int orig_fd)
+-{
+-	int fds[2];
+-	pid_t pid;
+-
+-	if (pipe(fds)) {
+-		fprintf(stderr, "unable to create pipe: %s\n",
+-			strerror(errno));
+-		exit(1);
+-	}
+-
+-	*fd = fds[1];
+-
+-	pid = fork();
+-	if (pid < 0) {
+-		fprintf(stderr, "unable to fork: %s\n", strerror(errno));
+-		return pid;
+-	}
+-
+-	if (pid) {
+-		close(fds[0]);
+-		return pid;
+-	}
+-
+-	close(fds[1]);
+-
+-	return pipe_child(fds[0], orig_fd);
+-}
+-
+ int main(int argc, char **argv) {
+ 	int maxjobs = -1;
+ 	int curjobs = 0;
+@@ -198,8 +115,6 @@
+ 	int cidx = 0;
+ 	int returncode = 0;
+ 	int replace_cb = 0;
+-	int stdout_fd = 1;
+-	int stderr_fd = 2;
+ 	char *t;
+ 
+ 	while ((argv[optind] && strcmp(argv[optind], "--") != 0) &&
+@@ -286,12 +201,6 @@
+ 		exit(2);
+ 	}
+ 
+-	pipe_child_stdout = create_pipe_child(&stdout_fd, 1);
+-	pipe_child_stderr = create_pipe_child(&stderr_fd, 2);
+-
+-	if ((pipe_child_stdout < 0) || (pipe_child_stderr < 0))
+-		exit(1);
+-
+ 	while (argidx < arglen) {
+ 		double load;
+ 
+@@ -303,8 +212,7 @@
+ 			if (argsatonce > arglen - argidx)
+ 				argsatonce = arglen - argidx;
+ 			exec_child(command, arguments + argidx,
+-				   replace_cb, argsatonce, stdout_fd,
+-				   stderr_fd);
++				   replace_cb, argsatonce);
+ 			argidx += argsatonce;
+ 			curjobs++;
+ 		}
+@@ -330,15 +238,6 @@
+ 		curjobs--;
+ 	}
+ 
+-	if (pipe_child_stdout) {
+-		kill(pipe_child_stdout, SIGKILL);
+-		wait_for_child(0);
+-	}
+-	if (pipe_child_stderr) {
+-		kill(pipe_child_stderr, SIGKILL);
+-		wait_for_child(0);
+-	}
+-
+ 	return returncode;
+ }
+ 
+diff -u moreutils/parallel.docbook moreutils-0.50/parallel.docbook
+--- moreutils/parallel.docbook	2015-12-23 23:42:26.340367876 +0300
++++ moreutils-0.50/parallel.docbook	2015-12-10 10:35:54.000000000 +0300
+@@ -7,13 +7,13 @@
+ -->
+ 
+ <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.4//EN"
+-"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"
++"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd"
+ []>
+ 
+ <refentry>
+ 	<refentryinfo>
+ 		<address>
+-			<email>id@joeyh.name</email>
++			<email>joey@kitenet.net</email>
+ 		</address>
+ 		<author>
+ 			<firstname>Joey</firstname>
+@@ -25,8 +25,6 @@
+ 	<refmeta>
+ 		<refentrytitle>parallel</refentrytitle>
+ 		<manvolnum>1</manvolnum>
+-		<refmiscinfo class="manual">moreutils</refmiscinfo>
+-		<refmiscinfo class="source">moreutils</refmiscinfo>
+ 	</refmeta>
+ 
+ 	<refnamediv>
+@@ -112,7 +110,9 @@
+ 		<title>EXAMPLE</title>
+ 		
+ 	<para>
++	<cmdsynopsis>
+ 		<command>parallel sh -c "echo hi; sleep 2; echo bye" -- 1 2 3</command>
++	</cmdsynopsis>
+ 	</para>
+ 
+ 	<para>This runs three subshells that each print a message, delay,
+@@ -123,7 +123,9 @@
+ 	</para>
+ 		
+ 	<para>
++	<cmdsynopsis>
+ 		<command>parallel -j 3 ufraw -o processed -- *.NEF</command>
++	</cmdsynopsis>
+ 	</para>
+ 
+ 	<para>This runs three ufraw processes at the same time until
+@@ -131,7 +133,9 @@
+ 	</para>
+ 	
+ 	<para>
++	<cmdsynopsis>
+ 		<command>parallel -j 3 -- ls df "echo hi"</command>
++	</cmdsynopsis>
+ 	</para>
+ 
+ 	<para>This runs three independent commands in parallel.</para>
+@@ -147,20 +151,6 @@
+ 	exits nonzero, <command>parallel</command> as a whole will exit nonzero.)</para>
+ 		
+ 	</refsect1>
+-
+-	<refsect1>
+-		<title>NOTES</title>
+-
+-	<para>
+-		All output to stdout and stderr is serialised through a
+-		corresponding internal pipe, in order to prevent annoying
+-		concurrent output behaviour.  Note that serialisation is not
+-		done on any other file descriptors and file position based
+-		access to a nonstandard file descriptor might have unexpected
+-		results.
+-	</para>
+-
+-	</refsect1>
+ 	
+ 	<refsect1>
+ 		<title>AUTHOR</title>
+Только в moreutils-0.50: pee
+diff -u moreutils/pee.docbook moreutils-0.50/pee.docbook
+--- moreutils/pee.docbook	2015-12-23 23:42:26.340367876 +0300
++++ moreutils-0.50/pee.docbook	2015-12-10 10:35:54.000000000 +0300
+@@ -2,7 +2,7 @@
+ 
+ <!--
+ 
+-Copyright 2006 Joey Hess <id@joeyh.name>
++Copyright 2006 Joey Hess <joey@kitenet.net>
+ 
+ This program is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the
+@@ -21,13 +21,13 @@
+ -->
+ 
+ <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.4//EN"
+-"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"
++"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd"
+ []>
+ 
+ <refentry>
+ 	<refentryinfo>
+ 		<address>
+-			<email>id@joeyh.name</email>
++			<email>joey@kitenet.net</email>
+ 		</address>
+ 		<author>
+ 			<firstname>Joey</firstname>
+@@ -39,8 +39,6 @@
+ 	<refmeta>
+ 		<refentrytitle>pee</refentrytitle>
+ 		<manvolnum>1</manvolnum>
+-		<refmiscinfo class="manual">moreutils</refmiscinfo>
+-		<refmiscinfo class="source">moreutils</refmiscinfo>
+ 	</refmeta>
+ 
+ 	<refnamediv>
+diff -u moreutils/README moreutils-0.50/README
+--- moreutils/README	2015-12-23 23:42:26.336365874 +0300
++++ moreutils-0.50/README	2015-12-10 10:35:54.000000000 +0300
+@@ -17,11 +17,11 @@
+ vipe: insert a text editor into a pipe
+ zrun: automatically uncompress arguments to command
+ 
+-Its web page is here: http://joeyh.name/code/moreutils/
++Its web page is here: http://kitenet.net/~joey/code/moreutils/
+ 
+ Your suggestions of additional tools to add to this collection are
+ appreciated. The web page lists some that are under consideration but
+ have not yet been included, I also welcome feedback on which of these to
+ include.
+ 
+--- Joey Hess <id@joeyh.name>
++-- Joey Hess <joey@kitenet.net>
+Только в moreutils-0.50: sponge
+diff -u moreutils/sponge.c moreutils-0.50/sponge.c
+--- moreutils/sponge.c	2015-12-23 23:42:26.340367876 +0300
++++ moreutils-0.50/sponge.c	2015-12-10 10:35:54.000000000 +0300
+@@ -34,7 +34,6 @@
+ /* SIZE_MAX */
+ #include <stdint.h> 
+ #include <signal.h>
+-#include <getopt.h>
+ 
+ #include "physmem.c"
+ 
+@@ -43,8 +42,7 @@
+ char *tmpname = NULL;
+ 
+ void usage() {
+-	printf("sponge [-a] <file>: soak up all input from stdin and write it "
+-	       "to <file>\n");
++	printf("sponge <file>: soak up all input from stdin and write it to <file>\n");
+ 	exit(0);
+ }
+ 
+@@ -209,25 +207,21 @@
+ 	}
+ }
+ 
+-static void copy_file (FILE *infile, FILE *outfile, char *buf, size_t size) {
++static void copy_tmpfile (FILE *tmpfile, FILE *outfile, char *buf, size_t size) {
+ 	ssize_t i;
+-	while ((i = read(fileno(infile), buf, size)) > 0) {
++	if (lseek(fileno(tmpfile), 0, SEEK_SET)) {
++		perror("could to seek to start of temporary file");
++		fclose(tmpfile);
++		exit(1);
++	}
++	while ((i = read(fileno(tmpfile), buf, size)) > 0) {
+ 		write_buff_out(buf, i, outfile);
+ 	}
+ 	if (i == -1) {
+-		perror("read file");
+-		fclose(infile);
+-		exit(1);
+-	}
+-}
+-
+-static void copy_tmpfile (FILE *tmpfile, FILE *outfile, char *buf, size_t size) {
+-	if (lseek(fileno(tmpfile), 0, SEEK_SET)) {
+-		perror("could to seek to start of file");
++		perror("read temporary file");
+ 		fclose(tmpfile);
+ 		exit(1);
+ 	}
+-	copy_file(tmpfile, outfile, buf, size);
+ 	if (fclose(tmpfile) != 0) {
+ 		perror("read temporary file");
+ 		exit(1);
+@@ -284,21 +278,14 @@
+ 	ssize_t i = 0;
+ 	size_t mem_available = default_sponge_size();
+ 	int tmpfile_used=0;
+-	int append=0;
+-	int opt;
+ 
+-	while ((opt = getopt(argc, argv, "ha")) != -1) {
+-		switch (opt) {
+-			case 'h':
+-				usage();
+-				break;
+-			case 'a':
+-				append=1;
+-		}
++	if (argc > 2 || (argc == 2 && strcmp(argv[1], "-h") == 0)) {
++		usage();
++	}
++	if (argc == 2) {
++		outname = argv[1];
+ 	}
+-	if (optind < argc)
+-		outname = argv[optind];
+-	
++				
+ 	tmpfile = open_tmpfile();
+ 	bufstart = buf = malloc(bufsize);
+ 	if (!buf) {
+@@ -333,18 +320,6 @@
+ 		mode_t mode;
+ 		struct stat statbuf;
+ 		int exists = (lstat(outname, &statbuf) == 0);
+-		int regfile = exists && S_ISREG(statbuf.st_mode) && ! S_ISLNK(statbuf.st_mode);
+-
+-		if (append && regfile) {
+-			char *tmpbuf = malloc(bufsize);
+-			if (!tmpbuf) {
+-				perror("failed to allocate memory");
+-				exit(1);
+-			}
+-			outfile = fopen(outname, "r");
+-			copy_file(outfile, tmpfile, tmpbuf, bufsize);
+-			fclose(outfile);
+-		}
+ 		
+ 		write_buff_tmp_finish(bufstart, bufused, tmpfile);
+ 
+@@ -366,13 +341,16 @@
+ 
+ 		/* If it's a regular file, or does not yet exist,
+ 		 * attempt a fast rename of the temp file. */
+-		if ((regfile || ! exists) &&
++		if (((exists &&
++		      S_ISREG(statbuf.st_mode) &&
++		      ! S_ISLNK(statbuf.st_mode)
++		     ) || ! exists) &&
+ 		    rename(tmpname, outname) == 0) {
+ 			tmpname=NULL; /* don't try to cleanup tmpname */
+ 		}
+ 		else {	
+ 			/* Fall back to slow copy. */
+-			outfile = fopen(outname, append ? "a" : "w");
++			outfile = fopen(outname, "w");
+ 			if (!outfile) {
+ 				perror("error opening output file");
+ 				exit(1);
+diff -u moreutils/sponge.docbook moreutils-0.50/sponge.docbook
+--- moreutils/sponge.docbook	2015-12-23 23:42:26.340367876 +0300
++++ moreutils-0.50/sponge.docbook	2015-12-10 10:35:54.000000000 +0300
+@@ -21,7 +21,7 @@
+ -->
+ 
+ <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.4//EN"
+-"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"
++"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd"
+ []>
+ 
+ <refentry>
+@@ -37,8 +37,6 @@
+ 	<refmeta>
+ 		<refentrytitle>sponge</refentrytitle>
+ 		<manvolnum>1</manvolnum>
+-		<refmiscinfo class="manual">moreutils</refmiscinfo>
+-		<refmiscinfo class="source">moreutils</refmiscinfo>
+ 	</refmeta>
+ 
+ 	<refnamediv>
+@@ -48,7 +46,7 @@
+ 
+ 	<refsynopsisdiv>
+ 		<cmdsynopsis>
+-			<command>sed '...' file | grep '...' | sponge [-a] file</command>
++			<command>sed '...' file | grep '...' | sponge file</command>
+ 		</cmdsynopsis>
+ 	</refsynopsisdiv>
+ 
+@@ -57,52 +55,20 @@
+ 		
+ 		<para><command>sponge</command> reads standard input and
+ 			writes it out to the specified file. Unlike a shell
+-			redirect, <command>sponge</command> soaks up all its input before
+-			writing the output file. This allows constructing
++			redirect, sponge soaks up all its input before
++			opening the output file. This allows constructing
+ 			pipelines that read from and write to
+-			the same file.
+-		</para>
++			the same file.</para>
+ 		<para>
+-			<command>sponge</command> preserves the
+-			permissions of the output file
++			It also creates the output file
++			atomically by renaming a temp file into place,
++			and preserves the permissions of the output file
+ 			if it already exists.
+-		</para>
+-		<para>
+-			When possible, <command>sponge</command> creates or updates the
+-			output file atomically by renaming a temp
+-			file into place. (This cannot be done
+-			if TMPDIR is not in the same filesystem.)
+-		</para>
+-		<para>
+ 			If the output file is a special file or symlink,
+-			the data will be written to it, non-atomically.
+-		</para>
+-		<para>
+-			If no file is specified, <command>sponge</command> outputs to
+-			stdout.
+-		</para>
+-	</refsect1>
+-
+-	<refsect1>
+-		<title>OPTIONS</title>
+-
+-		<variablelist>
+-
+-		<varlistentry>
+-			<term><option>-a</option></term>
+-			<listitem>
+-				<para>
+-					Replace the file
+-					with a new file that contains
+-					the file's original content,
+-					with the standard input
+-					appended to it. This is done
+-					atomically when possible.
+-				</para>
+-			</listitem>
+-		</varlistentry>
++			the data will be written to it.</para>
++		<para>If no output file is specified, sponge outputs to
++			stdout.</para>
+ 
+-		</variablelist>
+ 	</refsect1>
+ 	
+ 	<refsect1>
+diff -u moreutils/ts moreutils-0.50/ts
+--- moreutils/ts	2015-12-23 23:42:26.340367876 +0300
++++ moreutils-0.50/ts	2015-12-10 10:35:54.000000000 +0300
+@@ -6,7 +6,7 @@
+ 
+ =head1 SYNOPSIS
+ 
+-ts [-r] [-i | -s] [format]
++ts [-r] [-i] [format]
+ 
+ =head1 DESCRIPTION
+ 
+@@ -27,9 +27,8 @@
+ If both -r and a format is passed, the existing timestamps are
+ converted to the specified format.
+ 
+-If the -i or -s switch is passed, ts timestamps incrementally instead. In case
+-of -i, every timestamp will be the time elapsed since the last timestamp. In
+-case of -s, the time elapsed since start of the program is used.
++If the -i switch is passed, ts timestamps incrementally instead.  Every
++timestamp will be the time elapsed since the last timestamp.
+ The default format changes to "%H:%M:%S", and "%.S" and "%.s" can be used
+ as well.
+ 
+@@ -40,7 +39,7 @@
+ 
+ =head1 AUTHOR
+ 
+-Copyright 2006 by Joey Hess <id@joeyh.name>
++Copyright 2006 by Joey Hess <joey@kitenet.net>
+ 
+ Licensed under the GNU GPL.
+ 
+@@ -54,9 +53,8 @@
+ 
+ my $rel=0;
+ my $inc=0;
+-my $sincestart=0;
+ use Getopt::Long;
+-GetOptions("r" => \$rel, "i" => \$inc, "s" => \$sincestart) || die "usage: ts [-r] [-i | -s] [format]\n";
++GetOptions("r" => \$rel, "i" => \$inc) || die "usage: ts [-r] [-i] [format]\n";
+ 
+ if ($rel) {
+ 	eval q{
+@@ -68,7 +66,7 @@
+ 
+ my $use_format=@ARGV;
+ my $format="%b %d %H:%M:%S";
+-if ($inc || $sincestart) {
++if ($inc) {
+ 	$format="%H:%M:%S";
+ 	$ENV{TZ}='GMT';
+ }
+@@ -96,17 +94,15 @@
+ 		if ($hires) {
+ 			my $f=$format;
+ 			my ($seconds, $microseconds) = Time::HiRes::gettimeofday();
+-			if ($inc || $sincestart) {
++			if ($inc) {
+ 				my $deltaseconds = $seconds - $lastseconds;
+ 				my $deltamicroseconds = $microseconds - $lastmicroseconds;
+ 				if ($deltamicroseconds < 0) {
+ 					$deltaseconds -= 1;
+ 					$deltamicroseconds += 1000000;
+ 				}
+-				if ($inc) {
+-					$lastseconds = $seconds;
+-					$lastmicroseconds = $microseconds;
+-				}
++				$lastseconds = $seconds;
++				$lastmicroseconds = $microseconds;
+ 				$seconds = $deltaseconds;
+ 				$microseconds = $deltamicroseconds;
+ 			}
+@@ -115,12 +111,10 @@
+ 			print strftime($f, localtime($seconds));
+ 		}
+ 		else {
+-			if ($inc || $sincestart) {
++			if ($inc) {
+ 				my $seconds = time;
+ 				my $deltaseconds = $seconds - $lastseconds;
+-				if ($inc) {
+-					$lastseconds = $seconds;
+-				}
++				$lastseconds = $seconds;
+ 				print strftime($format, localtime($deltaseconds));
+ 			} else {
+ 				print strftime($format, localtime);
+diff -u moreutils/vidir moreutils-0.50/vidir
+--- moreutils/vidir	2015-12-23 23:42:26.340367876 +0300
++++ moreutils-0.50/vidir	2015-12-10 10:35:54.000000000 +0300
+@@ -70,14 +70,12 @@
+ 
+ =head1 AUTHOR
+ 
+-Copyright 2006 by Joey Hess <id@joeyh.name>
++Copyright 2006 by Joey Hess <joey@kitenet.net>
+ 
+ Licensed under the GNU GPL.
+ 
+ =cut
+ 
+-use File::Basename;
+-use File::Path qw(make_path);
+ use File::Spec;
+ use File::Temp;
+ use Getopt::Long;
+@@ -154,8 +152,7 @@
+ 		elsif ($name ne $item{$num}) {
+ 			next unless length $name;
+ 			my $src=$item{$num};
+-			my $dir=dirname($name);
+-
++			
+ 			if (! (-e $src || -l $src) ) {
+ 				print STDERR "$0: $src does not exist\n";
+ 				delete $item{$num};
+@@ -184,20 +181,14 @@
+ 				}
+ 			}
+ 
+-			if ((! -d $dir) && (! make_path($dir, {
+-							verbose => $verbose,
+-						}))) {
+-				print STDERR "$0: failed to create directory tree $dir: $!\n";
+-				$error=1;
+-			}
+-			elsif (! rename($src, $name)) {
++			if (! rename($src, $name)) {
+ 				print STDERR "$0: failed to rename $src to $name: $!\n";
+ 				$error=1;
+ 			}
+ 			else {
+ 				if (-d $name) {
+ 					foreach (values %item) {
+-						s,^\Q$src\E($|/),$name$1,;
++						s/^\Q$src\E/$name/;
+ 					}
+ 				}
+ 				if ($verbose) {
+diff -u moreutils/vipe moreutils-0.50/vipe
+--- moreutils/vipe	2015-12-23 23:42:26.340367876 +0300
++++ moreutils-0.50/vipe	2015-12-10 10:35:54.000000000 +0300
+@@ -13,7 +13,7 @@
+ vipe allows you to run your editor in the middle of a unix pipeline and
+ edit the data that is being piped between programs. Your editor will
+ have the full data being piped from command1 loaded into it, and when you
+-close it, that data will be piped into command2.
++save, that data will be piped into command2.
+ 
+ =head1 ENVIRONMENT VARIABLES
+ 
+@@ -31,7 +31,7 @@
+ 
+ =head1 AUTHOR
+ 
+-Copyright 2006 by Joey Hess <id@joeyh.name>
++Copyright 2006 by Joey Hess <joey@kitenet.net>
+ 
+ Licensed under the GNU GPL.
+ 
